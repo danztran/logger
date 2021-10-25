@@ -41,7 +41,7 @@ var (
 	// log := logger.MustNamed("main")
 	log = logger.MustNew()
 
-	// or just import and user default logger
+	// or just import and use default logger
 	// import "github.com/carousell/gologger/log"
 )
 
@@ -67,6 +67,7 @@ func logDurationWithAutoLevel() {
 }
 
 func logDurationWithPrefixMessage(userID string) {
+        // wrap this message to new logger
 	log := log.Withf("[user:%s]", userID)
 	defer log.Warnd(50 * time.Millisecond)("do something C")  // WARN "[user:123] do something C: 200.123ms"
 	defer log.Warnd(300 * time.Millisecond)("do something C") // <not logging>
