@@ -9,14 +9,19 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func newZapLogger(module string) (*zap.SugaredLogger, error) {
+func ReadConfig(name string) (*zap.Config, error) {
 	var (
 		logLevel    = getEnv("LOG_LEVEL", "debug")      // or info, warn, error, panic, fatal
 		logColor    = getEnv("LOG_COLOR", "")           // or true to enable
 		logEncoding = getEnv("LOG_ENCODING", "console") // json
-		config      = zap.NewProductionConfig()
 	)
 
+	if name != "" {
+		envLevel := fmt.Sprintf("LOG_LEVEL_%s", strings.ToUpper(name))
+		logLevel = getEnv(envLevel, logLevel)
+	}
+
+	// encoding
 	encoderCfg := zap.NewProductionEncoderConfig()
 	encoderCfg.ConsoleSeparator = "\t"
 	encoderCfg.EncodeLevel = zapcore.CapitalLevelEncoder
@@ -24,28 +29,35 @@ func newZapLogger(module string) (*zap.SugaredLogger, error) {
 	if logColor == "true" {
 		encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	}
-
-	config.Encoding = strings.ToLower(logEncoding)
-	config.EncoderConfig = encoderCfg
-
-	if module == "" {
+	if name == "" {
 		encoderCfg.NameKey = ""
-	} else {
-		logLevel = getEnv(fmt.Sprintf("LOG_LEVEL_%s", strings.ToUpper(module)), logLevel)
 	}
 
+	// config
+	config := zap.NewProductionConfig()
+	config.Encoding = strings.ToLower(logEncoding)
+	config.EncoderConfig = encoderCfg
 	if err := config.Level.UnmarshalText([]byte(logLevel)); err != nil {
 		return nil, fmt.Errorf("error parse log level: %s / %w", logLevel, err)
 	}
+
+	return &config, nil
+}
+
+func NewZap(name string) (*zap.SugaredLogger, error) {
+	config, err := ReadConfig(name)
+	if err != nil {
+		return nil, fmt.Errorf("error parse zap config / %w", err)
+	}
+
 	log, err := config.Build()
 	if err != nil {
 		return nil, fmt.Errorf("error build logger / %w", err)
 	}
 
-	log = log.WithOptions(zap.AddCallerSkip(1))
-	if module != "" {
-		log = log.Named(module)
-	}
+	log = log.
+		Named(name).
+		WithOptions(zap.AddCallerSkip(1))
 
 	return log.Sugar(), nil
 }

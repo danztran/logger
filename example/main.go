@@ -1,30 +1,3 @@
-# logger
-
-![tests](https://github.com/carousell/gologger/actions/workflows/main.yml/badge.svg)
-
-Package logger is a wrapper of structured Zap Logger with extended features.
-
-## Features
-
-- Config logger via env.
-- Name key is optional, add custom prefix message.
-- Add log duration functions (Infod, Debugd, Warnd, Autod).
-- Add default logger instance in package `log`.
-- Share common logger across repositories.
-- Simple but fully log format information.
-- More easier to use with very basic init functions.
-
-## Quick start
-
-### Install
-
-```bash
-go get -d github.com/carousell/gologger
-```
-
-### Example
-
-```go
 package main
 
 import (
@@ -71,4 +44,3 @@ func logDurationWithPrefixMessage(userID string) {
 	defer log.Warnd(300 * time.Millisecond)("do something C") // <not logging>
 	time.Sleep(200 * time.Millisecond)
 }
-```
