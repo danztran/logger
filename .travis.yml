@@ -1,0 +1,11 @@
+language: go
+go: "1.17"
+
+jobs:
+  include:
+    - stage: Test
+      name: "Unit Test"
+      script:
+      - go build -v ./...
+      - go test -v ./...
+      - go run example/main.go

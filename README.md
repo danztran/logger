@@ -1,6 +1,7 @@
 # logger
 
-![tests](https://github.com/carousell/gologger/actions/workflows/main.yml/badge.svg)
+![actions](https://github.com/carousell/gologger/actions/workflows/main.yml/badge.svg)
+[![travis](https://app.travis-ci.com/carousell/gologger.svg?branch=main)](https://app.travis-ci.com/carousell/gologger)
 
 Package logger is a wrapper of structured Zap Logger with extended features.
 
