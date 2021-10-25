@@ -23,6 +23,24 @@ Package logger is a wrapper of structured Zap Logger with extended features.
 go get -d github.com/carousell/gologger
 ```
 
+### Options
+```bash
+# log levels: debug (default), info, warn, error, fatal, panic
+# set default log level
+LOG_LEVEL="debug"
+# set log level for named logger
+LOG_LEVEL_$NAME="debug"
+
+# log color: false (default), true
+# colorize on level field 
+LOG_COLOR="true"
+
+# log encoding: console (default), json
+#   console: simple content (easy to read)
+#   json: structured json logs (easy to search)
+LOG_ENCODING="console"
+```
+
 ### Example
 
 ```go
@@ -47,7 +65,9 @@ var (
 
 func main() {
 	// simple log with info level
-	log.Info("execution start")         // INFO "execution start"
+	log.Info("start") // INFO "start"
+	
+	// log duration
 	defer log.Infod()("execution time") // INFO "execution time: xx.xx"
 	logDuration()
 	logDurationWithAutoLevel()
@@ -55,22 +75,33 @@ func main() {
 }
 
 func logDuration() {
-	// log function time
-	defer log.Debugd()("do something A took") // DEBUG "do something A took: 312ms"
+	// log duration
+	defer log.Debugd()("do A took") // DEBUG "do A took: 312ms"
 	time.Sleep(300 * time.Millisecond)
 }
 
 func logDurationWithAutoLevel() {
-	defer log.Autod(1 * time.Second)("do something B") // WARN "do something B: 2.015s"
-	defer log.Autod(3 * time.Second)("do something B") // DEBUG "do something B: 2.012s"
+        // Autod log with warn level if duration is longer than expected, otherwise log with debug level
+	// log with warn level because duration (2s) is longer than expected (1s)
+	defer log.Autod(1 * time.Second)("do B") // WARN "do B: 2.015s"
+	
+	// log with debug level because duration (2s) is shorter than expected (3s)
+	defer log.Autod(3 * time.Second)("do B") // DEBUG "do B: 2.012s"
+	
 	time.Sleep(2 * time.Second)
 }
 
 func logDurationWithPrefixMessage(userID string) {
-        // wrap this message to new logger
+        // make new logger with prefix message
 	log := log.Withf("[user:%s]", userID)
-	defer log.Warnd(50 * time.Millisecond)("do something C")  // WARN "[user:123] do something C: 200.123ms"
-	defer log.Warnd(300 * time.Millisecond)("do something C") // <not logging>
+	
+	// Warnd log warn if duration tooks longer than epected, otherwise nothing will be logged
+	// log as warn because duration (200ms) is longer than expected (50ms)
+	defer log.Warnd(50 * time.Millisecond)("do C")  // WARN "[user:123] do C: 200.123ms"
+	
+	// not logging because duration (200ms) is shorter than expected (300ms)
+	defer log.Warnd(300 * time.Millisecond)("do C")
+	
 	time.Sleep(200 * time.Millisecond)
 }
 ```
