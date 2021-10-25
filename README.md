@@ -28,8 +28,8 @@ go get -d github.com/carousell/gologger
 # log levels: debug (default), info, warn, error, fatal, panic
 # set default log level
 LOG_LEVEL="debug"
-# set log level for named logger
-LOG_LEVEL_$NAME="debug"
+# set log level for named logger (with uppercase), for example: LOG_LEVEL_MAIN, LOG_LEVEL_HANDLER, LOG_LEVEL_DB
+LOG_LEVEL_<NAME>="debug"
 
 # log color: false (default), true
 # colorize on level field 
