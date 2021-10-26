@@ -5,7 +5,7 @@ import logger "github.com/carousell/gologger"
 
 var (
 	log  = logger.MustNew()
-	Core = log.Core
+	Core = log.Unwrap
 	Skip = log.Skip
 
 	With  = log.With

@@ -13,34 +13,42 @@ var (
 	// log := logger.MustNamed("main")
 	log = logger.MustNew()
 
-	// or just import and user default logger
+	// or just import and use default logger
 	// import "github.com/carousell/gologger/log"
 )
 
 func main() {
 	// simple log with info level
-	log.Info("execution start")         // INFO "execution start"
+	log.Info("start")                   // INFO "start"
 	defer log.Infod()("execution time") // INFO "execution time: xx.xx"
-	logDuration()
-	logDurationWithAutoLevel()
-	logDurationWithPrefixMessage("123")
+
+	doSomething()
 }
 
-func logDuration() {
-	// log function time
-	defer log.Debugd()("do something A took") // DEBUG "do something A took: 312ms"
-	time.Sleep(300 * time.Millisecond)
-}
+func doSomething() {
+	defer log.Debugd()("do A took") // DEBUG "do A took: 312ms"
 
-func logDurationWithAutoLevel() {
-	defer log.Autod(1 * time.Second)("do something B") // WARN "do something B: 2.015s"
-	defer log.Autod(3 * time.Second)("do something B") // DEBUG "do something B: 2.012s"
+	// Autod log with warn level if duration is longer than expected,
+	// otherwise log with debug level.
+
+	// log with warn level because duration (2s) is longer than expected (1s)
+	defer log.Autod(1 * time.Second)("do B") // WARN "do B: 2.015s"
+
+	// log with debug level because duration (2s) is shorter than expected (3s)
+	defer log.Autod(3 * time.Second)("do B") // DEBUG "do B: 2.012s"
+
+	// make new logger with prefix message
+	userID := 123
+	log := log.Withf("[user:%d]", userID)
+
+	// Warnd log warn if duration tooks longer than expected,
+	// otherwise nothing will be logged.
+
+	// log as warn because duration (2s) is longer than expected (1s)
+	defer log.Warnd(1 * time.Second)("do C") // WARN "[user:123] do C: 2.011ms"
+
+	// not logging because duration (2s) is shorter than expected (3s)
+	defer log.Warnd(3 * time.Second)("do C")
+
 	time.Sleep(2 * time.Second)
-}
-
-func logDurationWithPrefixMessage(userID string) {
-	log := log.Withf("[user:%s]", userID)
-	defer log.Warnd(50 * time.Millisecond)("do something C")  // WARN "[user:123] do something C: 200.123ms"
-	defer log.Warnd(300 * time.Millisecond)("do something C") // <not logging>
-	time.Sleep(200 * time.Millisecond)
 }

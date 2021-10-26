@@ -4,16 +4,21 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func ReadConfig(name string) (*zap.Config, error) {
+// NewZapConfig read log config from environment
+// default value will be used if env is invalid
+func NewZapConfig(name string) *zap.Config {
 	var (
-		logLevel    = getEnv("LOG_LEVEL", "debug")      // or info, warn, error, panic, fatal
-		logColor    = getEnv("LOG_COLOR", "")           // or true to enable
-		logEncoding = getEnv("LOG_ENCODING", "console") // json
+		logLevel     = getEnv("LOG_LEVEL", "debug")       // debug, info, warn, error, panic, fatal
+		logColor     = getEnv("LOG_COLOR", "")            // true to enable
+		logEncoding  = getEnv("LOG_ENCODING", "console")  // console, json
+		logTimestamp = getEnv("LOG_TIMESTAMP", "rfc3339") // rfc3339, rfc3339nano, iso8601, s, ms, ns, disabled
+		logSeparator = getEnv("LOG_SEPARATOR", "\t")
 	)
 
 	if name != "" {
@@ -23,33 +28,25 @@ func ReadConfig(name string) (*zap.Config, error) {
 
 	// encoding
 	encoderCfg := zap.NewProductionEncoderConfig()
-	encoderCfg.ConsoleSeparator = "\t"
-	encoderCfg.EncodeLevel = zapcore.CapitalLevelEncoder
-	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
-	if logColor == "true" {
-		encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	}
-	if name == "" {
-		encoderCfg.NameKey = ""
-	}
+	encoderCfg.ConsoleSeparator = logSeparator
+	encoderCfg.EncodeTime = parseTimeEncoding(logTimestamp)
+	encoderCfg.TimeKey = parseTimeKey(logTimestamp)
+	encoderCfg.EncodeLevel = parseLogEncoder(logColor)
+	encoderCfg.NameKey = parseNameKey(name)
 
 	// config
 	config := zap.NewProductionConfig()
-	config.Encoding = strings.ToLower(logEncoding)
+	config.Encoding = parseLogEncoding(logEncoding)
+	config.Level = zap.NewAtomicLevelAt(parseLogLevel(logLevel))
 	config.EncoderConfig = encoderCfg
-	if err := config.Level.UnmarshalText([]byte(logLevel)); err != nil {
-		return nil, fmt.Errorf("error parse log level: %s / %w", logLevel, err)
-	}
 
-	return &config, nil
+	return &config
 }
 
+// NewZap returns core logger as sugared logger with
+// default basic config
 func NewZap(name string) (*zap.SugaredLogger, error) {
-	config, err := ReadConfig(name)
-	if err != nil {
-		return nil, fmt.Errorf("error parse zap config / %w", err)
-	}
-
+	config := NewZapConfig(name)
 	log, err := config.Build()
 	if err != nil {
 		return nil, fmt.Errorf("error build logger / %w", err)
@@ -60,6 +57,82 @@ func NewZap(name string) (*zap.SugaredLogger, error) {
 		WithOptions(zap.AddCallerSkip(1))
 
 	return log.Sugar(), nil
+}
+
+func parseTimeEncoding(key string) zapcore.TimeEncoder {
+	switch key {
+	case "s":
+		return UnixTimeEncoder
+	case "ms":
+		return UnixMilliTimeEncoder
+	case "ns":
+		return zapcore.EpochNanosTimeEncoder
+	case "rfc3339nano":
+		return zapcore.RFC3339NanoTimeEncoder
+	case "rfc3339":
+		return zapcore.RFC3339TimeEncoder
+	case "iso8601":
+		return zapcore.ISO8601TimeEncoder
+	case "disabled":
+		return func(time.Time, zapcore.PrimitiveArrayEncoder) {}
+	default:
+		return zapcore.RFC3339TimeEncoder
+	}
+}
+
+func parseTimeKey(key string) string {
+	if key == "disabled" {
+		return ""
+	}
+	return "ts"
+}
+
+func parseLogEncoder(key string) zapcore.LevelEncoder {
+	if key == "true" {
+		return zapcore.LowercaseColorLevelEncoder
+	}
+	return zapcore.LowercaseLevelEncoder
+}
+
+func parseNameKey(key string) string {
+	if key != "" {
+		return "name"
+	}
+	return ""
+}
+
+func parseLogLevel(key string) zapcore.Level {
+	switch strings.ToLower(key) {
+	case "debug":
+		return zapcore.DebugLevel
+	case "info":
+		return zapcore.InfoLevel
+	case "warn":
+		return zapcore.WarnLevel
+	case "error":
+		return zapcore.ErrorLevel
+	case "panic":
+		return zapcore.PanicLevel
+	case "fatal":
+		return zapcore.FatalLevel
+	default:
+		return zapcore.DebugLevel
+	}
+}
+
+func parseLogEncoding(key string) string {
+	if key == "json" {
+		return key
+	}
+	return "console"
+}
+
+func UnixTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendInt64(t.Unix())
+}
+
+func UnixMilliTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendInt64(t.UnixMilli())
 }
 
 // getEnv get key environment variable if exist otherwise return defalutValue

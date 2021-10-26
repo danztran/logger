@@ -12,8 +12,8 @@ Package logger is a wrapper of structured Zap Logger with extended features.
 - Add log duration functions (Infod, Debugd, Warnd, Autod).
 - Add default logger instance in package `log`.
 - Share common logger across repositories.
-- Simple but fully log format information.
-- More easier to use with very basic init functions.
+- Easy to start with many simple ways to create a basic logger.
+- You can always switch to native zap logger with `log.Core()` if needed.
 
 ## Quick start
 
@@ -24,21 +24,26 @@ go get -d github.com/carousell/gologger
 ```
 
 ### Options
+
 ```bash
 # log levels: debug (default), info, warn, error, fatal, panic
 # set default log level
 LOG_LEVEL="debug"
-# set log level for named logger (with uppercase), for example: LOG_LEVEL_MAIN, LOG_LEVEL_HANDLER, LOG_LEVEL_DB
-LOG_LEVEL_<NAME>="debug"
+# set log level for named logger (with uppercase),
+# for example: LOG_LEVEL_MAIN, LOG_LEVEL_DB
+LOG_LEVEL_MAIN="debug"
 
 # log color: false (default), true
-# colorize on level field 
+# colorize on level field
 LOG_COLOR="true"
 
 # log encoding: console (default), json
 #   console: simple content (easy to read)
 #   json: structured json logs (easy to search)
 LOG_ENCODING="console"
+
+# timestamp format: rfc3339 (default), rfc3339nano, iso8601, s, ms, ns, disabled
+LOG_TIMESTAMP="rfc3339"
 ```
 
 ### Example
@@ -54,9 +59,9 @@ import (
 
 var (
 	// there are many ways to create a logger
-	// log, err := logger.Named("main")
-	// log, err := logger.New()
-	// log := logger.MustNamed("main")
+	// log, err = logger.Named("main")
+	// log, err = logger.New()
+	// log = logger.MustNamed("main")
 	log = logger.MustNew()
 
 	// or just import and use default logger
@@ -65,43 +70,55 @@ var (
 
 func main() {
 	// simple log with info level
-	log.Info("start") // INFO "start"
-	
-	// log duration
+	log.Info("start")                   // INFO "start"
 	defer log.Infod()("execution time") // INFO "execution time: xx.xx"
-	logDuration()
-	logDurationWithAutoLevel()
-	logDurationWithPrefixMessage("123")
+
+	doSomething()
 }
 
-func logDuration() {
-	// log duration
-	defer log.Debugd()("do A took") // DEBUG "do A took: 312ms"
-	time.Sleep(300 * time.Millisecond)
-}
+func doSomething() {
+	defer log.Debugd()("do A took") // DEBUG "do A took: 2.0011446s"
 
-func logDurationWithAutoLevel() {
-        // Autod log with warn level if duration is longer than expected, otherwise log with debug level
+	// Autod log with warn level if duration is longer than expected,
+	// otherwise log with debug level.
+
 	// log with warn level because duration (2s) is longer than expected (1s)
 	defer log.Autod(1 * time.Second)("do B") // WARN "do B: 2.015s"
-	
+
 	// log with debug level because duration (2s) is shorter than expected (3s)
 	defer log.Autod(3 * time.Second)("do B") // DEBUG "do B: 2.012s"
-	
+
+	// make new logger with prefix message
+	userID := 123
+	log := log.Withf("[user:%d]", userID)
+
+	// Warnd log warn if duration took longer than expected,
+	// otherwise nothing will be logged.
+
+	// log as warn because duration (2s) is longer than expected (1s)
+	defer log.Warnd(1 * time.Second)("do C") // WARN "[user:123] do C: 2.011s"
+
+	// not logging because duration (2s) is shorter than expected (3s)
+	defer log.Warnd(3 * time.Second)("do C")
+
 	time.Sleep(2 * time.Second)
 }
+```
 
-func logDurationWithPrefixMessage(userID string) {
-        // make new logger with prefix message
-	log := log.Withf("[user:%s]", userID)
-	
-	// Warnd log warn if duration tooks longer than epected, otherwise nothing will be logged
-	// log as warn because duration (200ms) is longer than expected (50ms)
-	defer log.Warnd(50 * time.Millisecond)("do C")  // WARN "[user:123] do C: 200.123ms"
-	
-	// not logging because duration (200ms) is shorter than expected (300ms)
-	defer log.Warnd(300 * time.Millisecond)("do C")
-	
-	time.Sleep(200 * time.Millisecond)
-}
+```bash
+$ LOG_COLOR=true go run example/main.go
+2021-10-26T18:00:30.792Z    info    example/main.go:22      start
+2021-10-26T18:00:32.794Z    warn    example/main.go:54      [user:123] do C: 2.0010509s
+2021-10-26T18:00:32.794Z    debug   example/main.go:54      do B: 2.0011264s
+2021-10-26T18:00:32.794Z    warn    example/main.go:54      do B: 2.0011339s
+2021-10-26T18:00:32.794Z    debug   example/main.go:54      do A took: 2.0011446s
+2021-10-26T18:00:32.794Z    info    example/main.go:26      execution time: 2.0011492s
+
+$ LOG_TIMESTAMP=ts LOG_ENCODING=json go run example/main.go
+{"level":"info","ts":1635257396952,"caller":"example/main.go:22","msg":"start"}
+{"level":"warn","ts":1635257398953,"caller":"example/main.go:54","msg":"[user:123] do C: 2.0010486s"}
+{"level":"debug","ts":1635257398953,"caller":"example/main.go:54","msg":"do B: 2.0011176s"}
+{"level":"warn","ts":1635257398953,"caller":"example/main.go:54","msg":"do B: 2.0011231s"}
+{"level":"debug","ts":1635257398953,"caller":"example/main.go:54","msg":"do A took: 2.0011263s"}
+{"level":"info","ts":1635257398953,"caller":"example/main.go:26","msg":"execution time: 2.0011293s"}
 ```
