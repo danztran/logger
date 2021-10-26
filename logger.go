@@ -58,7 +58,8 @@ func Wrap(logger *zap.SugaredLogger) *Logger {
 	return log
 }
 
-// Unwrap returns core logger instance, so you can log directly. (for performance concern)
+// Unwrap returns core logger instance, so you can use it directly.
+// you can also re-wrap this logger with Wrap function.
 func (c *Logger) Unwrap() *zap.SugaredLogger {
 	return c.core
 }

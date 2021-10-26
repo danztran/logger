@@ -13,7 +13,7 @@ Package logger is a wrapper of structured Zap Logger with extended features.
 - Add default logger instance in package `log`.
 - Share common logger across repositories.
 - Easy to start with many simple ways to create a basic logger.
-- You can always switch to native zap logger with `log.Core()` if needed.
+- Easy to switch between logger and sugared logger with `Wrap` and `Unwrap` method.
 
 ## Quick start
 
