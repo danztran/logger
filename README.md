@@ -71,7 +71,7 @@ var (
 func main() {
 	// simple log with info level
 	log.Info("start")                   // INFO "start"
-	defer log.Infod()("execution time") // INFO "execution time: xx.xx"
+	defer log.Infod()("execution time") // INFO "execution time: 2.016s"
 
 	doSomething()
 }
@@ -114,7 +114,7 @@ $ LOG_COLOR=true go run example/main.go
 2021-10-26T18:00:32.794Z    debug   example/main.go:54      do A took: 2.0011446s
 2021-10-26T18:00:32.794Z    info    example/main.go:26      execution time: 2.0011492s
 
-$ LOG_TIMESTAMP=ts LOG_ENCODING=json go run example/main.go
+$ LOG_TIMESTAMP=ms LOG_ENCODING=json go run example/main.go
 {"level":"info","ts":1635257396952,"caller":"example/main.go:22","msg":"start"}
 {"level":"warn","ts":1635257398953,"caller":"example/main.go:54","msg":"[user:123] do C: 2.0010486s"}
 {"level":"debug","ts":1635257398953,"caller":"example/main.go:54","msg":"do B: 2.0011176s"}
