@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -34,16 +35,18 @@ func TestWarnd(t *testing.T) {
 }
 
 func Benchmark_Zap(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "warn")
 	log, err := NewZap("benzap")
 	require.NoError(b, err)
 	for i := 0; i < b.N; i++ {
-		log.Debug("benchmarking")
+		log.Info("benchmarking")
 	}
 }
 
 func Benchmark_Logger(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "warn")
 	log := MustNamed("benlogger")
 	for i := 0; i < b.N; i++ {
-		log.Debug("benchmarking")
+		log.Info("benchmarking")
 	}
 }
