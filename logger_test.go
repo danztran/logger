@@ -4,8 +4,6 @@ import (
 	"os"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestLogger_Infod(t *testing.T) {
@@ -34,19 +32,77 @@ func TestWarnd(t *testing.T) {
 	})
 }
 
-func Benchmark_Zap(b *testing.B) {
-	os.Setenv("LOG_LEVEL", "warn")
-	log, err := NewZap("benzap")
-	require.NoError(b, err)
+func Benchmark_ZapRawMessage(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "debug")
+	log := MustNamed("benlogger").Unwrap()
+	defer log.Sync()
 	for i := 0; i < b.N; i++ {
-		log.Info("benchmarking")
+		log.Infof("benchmarking")
 	}
 }
 
-func Benchmark_Logger(b *testing.B) {
-	os.Setenv("LOG_LEVEL", "warn")
+func Benchmark_LoggerRawMessage(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "debug")
 	log := MustNamed("benlogger")
+	defer log.Sync()
 	for i := 0; i < b.N; i++ {
-		log.Info("benchmarking")
+		log.Infof("benchmarking")
+	}
+}
+
+func Benchmark_ZapLogNoOutput(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "warn")
+	log := MustNamed("benzap").Unwrap()
+	defer log.Sync()
+	prefix := "run"
+	for i := 0; i < b.N; i++ {
+		log.Infof("%s benchmarking", prefix)
+	}
+}
+
+func Benchmark_LoggerNoOutput(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "warn")
+	log := MustNamed("benlogger").With("run")
+	defer log.Sync()
+	for i := 0; i < b.N; i++ {
+		log.Infof("benchmarking")
+	}
+}
+
+func Benchmark_ZapWithArguments(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "warn")
+	log := MustNamed("benzap").Unwrap()
+	defer log.Sync()
+	prefix := "run"
+	for i := 0; i < b.N; i++ {
+		log.Infof("%s benchmarking: %d - %d", prefix, b.N, i)
+	}
+}
+
+func Benchmark_LoggerWithArguments(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "warn")
+	log := MustNamed("benlogger").With("run")
+	defer log.Sync()
+	for i := 0; i < b.N; i++ {
+		log.Infof("benchmarking: %d - %d", b.N, i)
+	}
+}
+
+func Benchmark_ZapToConsole(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "info")
+	log := MustNamed("benzap").Unwrap()
+	defer log.Sync()
+	prefix := "run"
+	for i := 0; i < b.N; i++ {
+		log.Infof("%s benchmarking: %d - %d", prefix, b.N, i)
+	}
+}
+
+func Benchmark_LoggerToConsole(b *testing.B) {
+	os.Setenv("LOG_LEVEL", "info")
+	log := MustNamed("benlogger").With("run")
+	defer log.Sync()
+	for i := 0; i < b.N; i++ {
+		log.Infof("benchmarking: %d - %d", b.N, i)
 	}
 }
