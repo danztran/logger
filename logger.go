@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -57,8 +58,12 @@ func Wrap(logger *zap.SugaredLogger) *Logger {
 }
 
 func wrap(logger *zap.SugaredLogger, prefix string) *Logger {
+	if prefix != "" {
+		prefix = strings.TrimSpace(prefix)
+		prefix += " "
+	}
 	log := &Logger{
-		prefix: "",
+		prefix: prefix,
 		logger: logger,
 		core:   logger.Desugar().Core(),
 	}
