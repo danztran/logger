@@ -5,5 +5,6 @@ import (
 )
 
 func Test(t *testing.T) {
-	log.Debug("ok")
+	Debug("debug")
+	Info("info")
 }

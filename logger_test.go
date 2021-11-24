@@ -4,6 +4,9 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func TestLogger_Infod(t *testing.T) {
@@ -30,6 +33,43 @@ func TestWarnd(t *testing.T) {
 		defer log.Autod(300 * time.Millisecond)("this should be logged in debug")
 		time.Sleep(100 * time.Millisecond)
 	})
+}
+
+func TestCaller(t *testing.T) {
+	os.Setenv("LOG_LEVEL", "info")
+	log := MustNamed("test-caller")
+	defer log.Sync()
+	log.Info("1")
+	log.Warn("2")
+
+	uw := log.Unwrap()
+	uw.Info("3")
+
+	log2 := Wrap(uw)
+	log2.Info("4")
+
+	zaplog, _ := NewZap("test-caller")
+	zaplog.Info("5")
+
+	w := Wrap(zaplog)
+	w.Warn("6")
+}
+
+func TestHook(t *testing.T) {
+	os.Setenv("LOG_LEVEL", "info")
+	log := MustNamed("test-hook").AddHook(func(e zapcore.Entry) error {
+		if e.Level >= zap.WarnLevel {
+			t.Logf("warn ne: %s - %", e.Level, e.Message)
+		}
+		return nil
+	})
+	defer log.Sync()
+	log.Info("1")
+	log.Warn("2")
+
+	uw := log.Unwrap()
+	uw.Warn("3")
+	uw.Info("4")
 }
 
 func Benchmark_ZapRawMessage(b *testing.B) {

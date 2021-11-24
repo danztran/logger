@@ -52,10 +52,7 @@ func NewZap(name string) (*zap.SugaredLogger, error) {
 		return nil, fmt.Errorf("error build logger / %w", err)
 	}
 
-	log = log.
-		Named(name).
-		WithOptions(zap.AddCallerSkip(1))
-
+	log = log.Named(name)
 	return log.Sugar(), nil
 }
 

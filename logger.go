@@ -47,14 +47,14 @@ func Named(name string) (*Logger, error) {
 		return nil, err
 	}
 
-	log := wrap(logger, "")
+	log := wrap(logger, "").Skip(1)
 	return log, nil
 }
 
 // Wrap wrap zap logger with pkg logger
 func Wrap(logger *zap.SugaredLogger) *Logger {
 	log := wrap(logger, "")
-	return log
+	return log.Skip(1)
 }
 
 func wrap(logger *zap.SugaredLogger, prefix string) *Logger {
@@ -74,7 +74,7 @@ func wrap(logger *zap.SugaredLogger, prefix string) *Logger {
 // Unwrap returns core logger instance, so you can use it directly.
 // you can also re-wrap this logger with Wrap function.
 func (c *Logger) Unwrap() *zap.SugaredLogger {
-	return c.logger
+	return c.Skip(-1).logger
 }
 
 // Skip return new instances that increases the number of callers skipped by caller annotation
@@ -83,6 +83,13 @@ func (c *Logger) Skip(skip int) *Logger {
 	return wrap(logger, c.prefix)
 }
 
+// AddHook add new hook to the core logger
+func (c *Logger) AddHook(fn func(e zapcore.Entry) error) *Logger {
+	logger := c.logger.Desugar().WithOptions(zap.Hooks(fn)).Sugar()
+	return wrap(logger, c.prefix)
+}
+
+// With uses fmt.Sprint to construct new logger with prefix
 func (c *Logger) With(args ...interface{}) *Logger {
 	return wrap(c.logger, c.makeMsg("", args))
 }

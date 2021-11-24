@@ -4,9 +4,11 @@ package log
 import logger "github.com/carousell/gologger"
 
 var (
-	log  = logger.MustNew()
-	Core = log.Unwrap
-	Skip = log.Skip
+	log     = logger.MustNew()
+	Core    = log.Unwrap
+	Skip    = log.Skip
+	AddHook = log.AddHook
+	Sync    = log.Sync
 
 	With  = log.With
 	Withf = log.Withf
