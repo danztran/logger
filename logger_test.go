@@ -59,7 +59,7 @@ func TestHook(t *testing.T) {
 	os.Setenv("LOG_LEVEL", "info")
 	log := MustNamed("test-hook").AddHook(func(e zapcore.Entry) error {
 		if e.Level >= zap.WarnLevel {
-			t.Logf("warn ne: %s - %", e.Level, e.Message)
+			t.Logf("warn ne: %s - %s", e.Level, e.Message)
 		}
 		return nil
 	})
