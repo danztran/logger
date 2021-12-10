@@ -129,7 +129,7 @@ func UnixTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 }
 
 func UnixMilliTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendInt64(t.UnixMilli())
+	enc.AppendInt64(t.UnixNano() / int64(time.Millisecond))
 }
 
 // getEnv get key environment variable if exist otherwise return defalutValue
