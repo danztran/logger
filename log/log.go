@@ -1,7 +1,7 @@
 // package log is the expose default logger instance
 package log
 
-import logger "github.com/carousell/gologger"
+import "github.com/danztran/logger"
 
 var (
 	log     = logger.MustNew()

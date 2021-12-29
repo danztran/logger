@@ -1,4 +1,4 @@
-module github.com/carousell/gologger
+module github.com/danztran/logger
 
 go 1.13
 

@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	logger "github.com/carousell/gologger"
+	"github.com/danztran/logger"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 	log = logger.MustNew()
 
 	// or just import and use default logger
-	// import "github.com/carousell/gologger/log"
+	// import "github.com/danztran/logger/log"
 )
 
 func main() {

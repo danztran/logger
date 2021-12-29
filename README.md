@@ -1,7 +1,7 @@
 # logger
 
-![actions](https://github.com/carousell/gologger/actions/workflows/main.yml/badge.svg)
-[![travis](https://app.travis-ci.com/carousell/gologger.svg?branch=main)](https://app.travis-ci.com/carousell/gologger)
+![actions](https://github.com/danztran/logger/actions/workflows/main.yml/badge.svg)
+[![travis](https://app.travis-ci.com/danztran/logger.svg?branch=main)](https://app.travis-ci.com/danztran/logger)
 
 Package logger is a wrapper of structured Zap Logger with extended features.
 
@@ -20,7 +20,7 @@ Package logger is a wrapper of structured Zap Logger with extended features.
 ### Install
 
 ```bash
-go get -d github.com/carousell/gologger
+go get -d github.com/danztran/logger
 ```
 
 ### Options
@@ -54,7 +54,7 @@ package main
 import (
 	"time"
 
-	logger "github.com/carousell/gologger"
+	logger "github.com/danztran/logger"
 )
 
 var (
@@ -65,7 +65,7 @@ var (
 	log = logger.MustNew()
 
 	// or just import and use default logger
-	// import "github.com/carousell/gologger/log"
+	// import "github.com/danztran/logger/log"
 )
 
 func main() {
